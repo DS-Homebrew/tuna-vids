@@ -12,6 +12,7 @@ static int CSP = XVID_CSP_RGB555;
 static int BPP = 2;
 
 static void *dec_handle = NULL;
+static int height = 0;
 
 #define MIN_USEFUL_BYTES 1
 #define UPDATE_PERIOD 60
@@ -77,6 +78,7 @@ static int dec_init(int frameWidth, int frameHeight)
 static int dec_main(unsigned char *istream, unsigned char *ostream,
     int istream_size, xvid_dec_stats_t *xvid_dec_stats)
 {
+	extern u16* colorTable;
     int ret;
 
     xvid_dec_frame_t xvid_dec_frame;
@@ -102,6 +104,12 @@ static int dec_main(unsigned char *istream, unsigned char *ostream,
     xvid_dec_frame.output.csp = CSP;
 
     ret = xvid_decore(dec_handle, XVID_DEC_DECODE, &xvid_dec_frame, xvid_dec_stats);
+	if (ret >= 0 && colorTable) {
+		u16* ostream16 = (u16*)ostream;
+		for (int i = 0; i < 256 * height; i++) {
+			ostream16[i] = colorTable[ostream16[i] % 0x8000] | BIT(15);
+		}
+	}
 
     return (ret);
 }
@@ -279,6 +287,7 @@ int play_movie(FILE* aviFile)
     vidBuf_AdjustDelay(audioDelay);
     vidBuf_SetFrameRate(frameRate);
     vidBuf_SetHeight(frameHeight);
+	height = frameHeight;
 
     if (frameWidth != SCREEN_WIDTH) {
         iprintf("Video is not 256px wide!\n");

@@ -7,6 +7,8 @@
 #include "controlsImg.h"
 #include "bios_decompress_callback.h"
 
+extern u16* colorTable;
+
 #define TILE_BASE 0
 #define STATIC_MAP_BASE 22
 #define OVERLAY_MAP_BASE 23
@@ -77,12 +79,27 @@ ButtonTiles lightButton;
 
 NumeralTiles seekBarBlocks[9];
 
-static void vramcpy(void* dest, const void* src, int size)
+void vramcpy(void* dest, const void* src, int size)
 {
     u16* destination = (u16*) dest;
     u16* source = (u16*) src;
     while (size > 0) {
         *destination++ = *source++;
+        size -= 2;
+    }
+}
+
+static void vramcpyLut(void* dest, const void* src, int size)
+{
+	if (!colorTable) {
+		vramcpy(dest, src, size);
+		return;
+	}
+
+    u16* destination = (u16*) dest;
+    u16* source = (u16*) src;
+    while (size > 0) {
+        *destination++ = colorTable[*source++ % 0x8000];
         size -= 2;
     }
 }
@@ -119,7 +136,7 @@ void controlsSetup(void)
     blankTile = controlsImgMap[BLANK_TILE_POSITION];
 
     // Copy in palette and tiles
-    vramcpy(&BG_PALETTE_SUB[0], controlsImgPal, controlsImgPalLen);
+    vramcpyLut(&BG_PALETTE_SUB[0], controlsImgPal, controlsImgPalLen);
     swiDecompressLZSSVram((void*) controlsImgTiles,
         (void*) BG_TILE_RAM_SUB(TILE_BASE), 0, &decompressBiosCallback);
 
@@ -180,6 +197,11 @@ void consoleSetup(void)
     }
     BG_PALETTE_SUB[255] = RGB15(31, 31, 31);
     consoleInit(NULL, 0, BgType_Text4bpp, BgSize_T_256x256, 15, 0, false, true);
+	if (colorTable) {
+		for (int i = 0; i < 256; i++) {
+			BG_PALETTE_SUB[i] = colorTable[BG_PALETTE_SUB[i] % 0x8000];
+		}
+	}
 }
 
 void showPlay(void)

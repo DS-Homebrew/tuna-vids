@@ -11,6 +11,8 @@ typedef struct
     int bottom;
 } ControlBounds;
 
+void vramcpy(void* dest, const void* src, int size);
+
 void controlsSetup(void);
 void consoleSetup(void);
 void showPlay(void);

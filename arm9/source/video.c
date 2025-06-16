@@ -131,9 +131,14 @@ void vidBuf_ResetVideo(void)
     vidBuf_videoFrameCount = 0;
     vidBuf_vblanks = 0;
 
+	extern u16* colorTable;
+	const u16 black = (colorTable ? colorTable[0] : 0) | BIT(15);
     for (int i = 0; i < NUM_VIDEO_PAGES; i++) {
         videoPages[i].readyForDisplay = false;
-        memset(videoPages[i].buffer, 0, SCREEN_WIDTH * SCREEN_HEIGHT);
+		u16* buffer16 = (u16*)videoPages[i].buffer;
+		for (int i2 = 0; i2 < SCREEN_WIDTH * SCREEN_HEIGHT; i2++) {
+			buffer16[i2] = black;
+		}
     }
 }
 

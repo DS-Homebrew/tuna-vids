@@ -32,6 +32,9 @@
 #include "version.h"
 #include "video.h"
 
+const char* clutTxtPath = "/_nds/colorLut/currentSetting.txt";
+u16* colorTable = NULL;
+
 const char *DEFAULTFILE = "/tuna-vids.avi";
 
 int main(int argc, const char* argv[])
@@ -69,6 +72,39 @@ int main(int argc, const char* argv[])
     vramSetBankA(VRAM_A_LCD);
     vramSetBankB(VRAM_B_LCD);
     vramSetBankC(VRAM_C_LCD);
+
+	if (access(clutTxtPath, F_OK) == 0) {
+		// Load color LUT
+		char lutName[128] = {0};
+		FILE* file = fopen(clutTxtPath, "rb");
+		fread(lutName, 1, 128, file);
+		fclose(file);
+
+		char colorLutPath[256];
+		sprintf(colorLutPath, "/_nds/colorLut/%s.lut", lutName);
+
+		if (access(colorLutPath, F_OK) == 0) {
+			file = fopen(colorLutPath, "rb");
+			fseek(file, 0, SEEK_END);
+			off_t fsize = ftell(file);
+			fseek(file, 0, SEEK_SET);
+
+			if (fsize == 0x10000) {
+				colorTable = (u16*)malloc(0x10000);
+				fread(colorTable, 1, 0x10000, file);
+
+				vramSetBankE(VRAM_E_LCD);
+				vramcpy(VRAM_E, colorTable, 0x10000);
+				free(colorTable);
+				colorTable = VRAM_E;
+
+				for (int i = 0; i < 256; i++) {
+					BG_PALETTE_SUB[i] = colorTable[BG_PALETTE_SUB[i] % 0x8000];
+				}
+			}
+			fclose(file);
+		}
+	}
 
     /* Most setup is done in libnds's initSystem() function, like:
      * irqInit()
