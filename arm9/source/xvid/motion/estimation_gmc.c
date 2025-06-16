@@ -77,7 +77,7 @@ GMEanalyzeMB (	const uint8_t * const pCur,
 
 	Data->predMV = get_pmv2(pMBs, pParam->mb_width, 0, x, y, 0);
 
-	get_range(&Data->min_dx, &Data->max_dx, &Data->min_dy, &Data->max_dy, x, y, 4,
+	get_range((int32_t*)&Data->min_dx, (int32_t*)&Data->max_dx, (int32_t*)&Data->min_dy, (int32_t*)&Data->max_dy, x, y, 4,
 				pParam->width, pParam->height, 16, 1);
 
 	Data->Cur = pCur + 16*(x + y * pParam->edged_width);

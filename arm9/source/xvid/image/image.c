@@ -30,6 +30,7 @@
 #include "../global.h"			/* XVID_CSP_XXX's */
 #include "../xvid.h"			/* XVID_CSP_XXX's */
 #include "image.h"
+#include "../motion/sad.h"
 #include "colorspace.h"
 #include "interpolate8x8.h"
 #include "../utils/mem_align.h"
