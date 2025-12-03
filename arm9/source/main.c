@@ -89,7 +89,7 @@ int main(int argc, const char* argv[])
 			off_t fsize = ftell(file);
 			fseek(file, 0, SEEK_SET);
 
-			if (fsize == 0x10000) {
+			if ((fsize >= 0x10000 && fsize < 0x20000) || fsize == 0x20000) {
 				colorTable = (u16*)malloc(0x10000);
 				fread(colorTable, 1, 0x10000, file);
 
